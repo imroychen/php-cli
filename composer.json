@@ -1,0 +1,22 @@
+{
+	"name": "iry/cli",
+	"description": "PHP CLI Helper",
+	"type": "library",
+	"version": "1.0.0",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "RoyChen",
+			"email": "hi@imroy.cn"
+		}
+	],
+	"require": {
+		"php": ">=5.4",
+      "ext-mbstring": "*"
+    },
+	"autoload": {
+		"psr-4": {
+			"iry\\cli\\": ""
+		}
+	}
+}
