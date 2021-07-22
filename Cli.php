@@ -5,10 +5,16 @@
  */
 
 namespace iry\cli;
+/**
+ * Class Cli
+ * @package iry\cli
+ * @method setCharset ($charset); //$charset:'utf-8', 'gbk', 'gb2312'
+ * @method setLang ($lang); //$lang: zh/en
+ */
 
  class Cli
  {
-	 private static $_cfg=['disable_style'=>false,'charset'=>'utf-8'];
+	 private static $_cfg=['disable_style'=>false,'charset'=>'utf-8','lang'=>'zh'];
 
  	 private static $_staticCache = [];
 
@@ -41,22 +47,49 @@ namespace iry\cli;
          'light_gray' => '47',
      ];
 
+     static private $_lang = [
+         'zh'=>[
+             '请选择'=>'请选择',
+             '请继续选择[#结束,<回退,*清空]'=>'请继续选择[#结束，<回退，*清空]',
+             '当前已选择'=>'当前已选择',
+             '输入不正确!请重新输入.'=>'输入不正确！请重新输入。'
+         ],
+         'en'=>[
+             '请选择'=>'Please select',
+             '请继续选择[#结束,<回退,*清空]'=>'Please continue to select[#complete，<go back，*reset]',
+             '当前已选择'=>'Currently selected',
+             '输入不正确!请重新输入.'=>'Invalid input! please enter again.'
+         ]
+     ];
+
      static function __callStatic($name, $arguments)
      {
-         //兼容老代码
-         $_name = strtolower($name);
-         $alias = [
-             'stdselect'=>'select',
-             'stdconfirm'=>'confirm'
-         ];
-         if(isset($alias[$_name])) {
-             return call_user_func_array([__CLASS__, $alias[$_name]], $arguments);
-         }else{
-             self::stdout( __CLASS__.'::'.$name." not found;",'error');
-             exit;
+         if(strpos($name,'set')===0){
+             $fn = substr($name,3);
+             if(isset(self::$_cfg[$fn])){
+                 self::$_cfg[$fn] = $arguments[0];
+             }
+         }else {
+             //兼容老代码
+             $_name = strtolower($name);
+             $alias = [
+                 'stdselect' => 'select',
+                 'stdconfirm' => 'confirm'
+             ];
+             if (isset($alias[$_name])) {
+                 return call_user_func_array([__CLASS__, $alias[$_name]], $arguments);
+             } else {
+                 self::stdout(__CLASS__ . '::' . $name . " not found;", 'error');
+                 exit;
+             }
          }
+
      }
 
+     /**
+      * windows cmd 不兼容
+      * @return mixed
+      */
      static private function _getScreenSize(){
      	if(!isset(self::$_staticCache['screen_size'])){
 			$t = trim(exec('stty size'));
@@ -66,6 +99,11 @@ namespace iry\cli;
 		 return self::$_staticCache['screen_size'];
 	 }
 
+     private static function _l($str){
+         $type = self::$_cfg['lang'];
+        return isset(self::$_lang[$type][$str])?self::$_lang[$type][$str]:$str;
+     }
+
 	 /**
 	  * 禁用样式
 	  * @param bool $status
@@ -74,12 +112,6 @@ namespace iry\cli;
          self::$_cfg['disable_style'] = (bool)$status;
 	 }
 
-     /**
-      * @param $charset 'utf-8', 'gbk', 'gb2312'
-      */
-	 static public function charset($charset){
-         self::$_cfg['charset'] = $charset;
-     }
 
      // Returns colored string
      static public function getColoredString($string, $foreground_color = null, $background_color = null)
@@ -111,10 +143,10 @@ namespace iry\cli;
       * @return mixed|string|void
       */
 
-     static function select($arr,$colQty=1,$msg='请选择',$mul=false){
+     static function select($arr,$colQty=1,$msg='',$mul=false){
          $n = 1;
          $row = 0;
-         if(empty($arr)){echo ("选项列表有误");return ;}
+         if(empty($arr)){echo (self::_l("选项列表有误"));return ;}
          self::stdout("\n---------------------------\n");
          foreach ($arr as $k=>$v){
              //$color = ($row%2)===0? 'while' :'light_gray';
@@ -135,7 +167,7 @@ namespace iry\cli;
 
 
          $r = [];
-         $msg = trim($msg)===''?'请选择':$msg;
+         $msg = trim($msg)===''?self::_l('请选择'):$msg;
          while (true){
              $tmpRes = self::stdin($msg.":\t",function($v) use ($arr,$mul){
                  return (is_numeric($v) && isset($arr[$v])) || ($mul && in_array($v,['#','<','*']));
@@ -155,8 +187,8 @@ namespace iry\cli;
 					 $r = array_unique($r);
 				 }
 				 echo "\033[1A\033[K";
-				 self::stdout('当前已选择:[' . implode(',', $r) . ']', 'comment');
-				 $msg = "请继续选择[#结束,<回退,*清空]";
+				 self::stdout(self::_l('当前已选择').':[' . implode(',', $r) . ']', 'comment');
+				 $msg = self::_l("请继续选择[#结束,<回退,*清空]");
 			 }
          }
          return $r;
@@ -200,7 +232,7 @@ namespace iry\cli;
          if(is_callable($validator) && !call_user_func($validator,$content) ){
              //if($callback && !$callback($content)){
              self::stdout("[error]",'highlight');
-             self::stdout('输入不正确!请重新输入.','comment');
+             self::stdout(self::_l('输入不正确!请重新输入.'),'comment');
              self::stdout("\n");
              $content = self::stdin($msg, $validator,$processor,$limitLen);
          }
