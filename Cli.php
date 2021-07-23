@@ -64,6 +64,7 @@ namespace iry\cli;
 
      static function __callStatic($name, $arguments)
      {
+         $name = $name==='charset'?'setCharset':$name;
          if(strpos($name,'set')===0){
              $fn = substr($name,3);
              if(isset(self::$_cfg[$fn])){
