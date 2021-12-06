@@ -218,7 +218,7 @@ namespace iry\cli;
      static function stdin($msg='',$validator=false,$processor = false,$limitLen=100000){
          if($msg) {
              if (strpos($msg, '[span]')) {
-                 self::output($msg . ':');
+                 self::stdout($msg . ':');
              } else {
                  self::stdout($msg . ':');
              }
@@ -249,6 +249,50 @@ namespace iry\cli;
       */
 
      static public function stdout($str,$type = false,$return = false){
+         return self::output($str,$type,$return);
+     }
+
+     /**
+      * @param array $header
+      * @param array $data
+      * @param string $align 'l/c/r/left/center/rignt'
+      * @return cmp\Table
+      */
+     static public function table($header=[],$data=[],$align='l',$autoRender=true){
+
+         $tab =  new cmp\Table();
+         if(!empty($header)){
+             $alignMap = ['l'=>1,'left'=>1,'r'=>0,'right'=>0,'c'=>2,'center'=>2];
+             $tab->setHeader($header,isset($alignMap[$align])?$alignMap[$align]:1);
+         }
+
+         $len = count($data);
+         if($len>0 && is_array($data)){
+             $i = 0;
+             foreach ($data as $d) {
+                 $i++;
+                 $tab->addRow($d);
+                 if($i<$len) {
+                     $tab->addRow('-');
+                 }
+             }
+         }
+         if($autoRender){
+             $tab->render();
+         }
+
+         return $tab;
+     }
+
+     /**
+      * 文本输出
+      * @param string|array $str  array:['this',['is','green'],'test'];
+      * @param bool $type error,info,comment,question,highlight,warning
+      * @param bool $return
+      * @return string
+      */
+
+     static public function output($str,$type = false,$return = false){
 
          if(is_array($str)){
              $r = '';
@@ -258,14 +302,14 @@ namespace iry\cli;
                      $text = (string)( isset($item['text'])?$item['text']:(isset($item[0])?$item[0]:'') );
                      $r .= self::stdout($text, $style, $return);
                  }else{
-					 $r .= self::stdout((string)$item, $type, $return);
+                     $r .= self::stdout((string)$item, $type, $return);
                  }
              }
-			 if ($return) {
-				 return $r;
-			 } else {
-				 echo $r;
-			 }
+             if ($return) {
+                 return $r;
+             } else {
+                 echo $r;
+             }
          }else {
              $typeList = [
                  'error' => ['white', 'red'],
@@ -299,40 +343,7 @@ namespace iry\cli;
                  return '';
              }
          }
-		 return '';
-     }
-
-	 /**
-	  * 混合输出
-	  * @param string $str error:[white, red], info:[green, null],comment:[yellow, null],
-	  *             question:[black, cyan],highlight:[red, null],warning:[black, yellow],
-	  */
-
-     static public function output($str)
-     {
-         //$str = is_array($str)? implode("\n", $str): $str;
-         //echo iconv('utf-8','gbk',$str);
-        $arr = explode("\n",$str);
-
-         $rowQty = count($arr);
-         $i = 0;
-         foreach($arr as $row) {
-             $i++;
-             $rowList = explode('[span]',$row);
-             foreach($rowList as $v) {
-                 $type = false;
-                 if(isset($v[0]) && $v[0]==='[' && strpos($v,']')>2  ){
-                     $tmp = explode(']',$v);
-                     $type = $tmp[0];unset($tmp[0]);
-                     //$type = trim(trim($type),'[ ]');
-                     //var_export($type);
-                     $v = implode("]",$tmp);
-                 }
-                 //var_export([$v,$type]);
-                 self::stdout($v,$type);
-             }
-             if($i<$rowQty){echo "\n";}
-         }
+         return '';
      }
 
      /**

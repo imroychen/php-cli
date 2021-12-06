@@ -16,7 +16,7 @@
     },
 	"autoload": {
 		"psr-4": {
-			"iry\\cli\\": ""
+			"iry\\cli\\": "src"
 		}
 	}
 }
