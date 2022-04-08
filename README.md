@@ -33,8 +33,8 @@ stdin($msg,$validator,$processor);//等待并获取用户输入的数据
 ```php
 use ir\cli\Cli;
 $numeric = Cli::stdin('请输入');//等待并获取用户输入的数据
-$numeric = Cli::stdin('请输入数字',function(){return preg_match('/^[0-9]+$/');},'trim');
-$numeric = Cli::stdin('请输入数字',function(){return preg_match('/^[0-9]+$/');},'trim');
+$numeric = Cli::stdin('请输入数字',function($v){return preg_match('/^[0-9]+$/',$v);},'trim');
+$numeric = Cli::stdin('请输入数字',function($v){return preg_match('/^[0-9]+$/',$v);},'trim');
 ```
 ## 标准输出 stdout($msg,$styleType)
 仅仅打印到屏幕 支持彩色文字
