@@ -171,7 +171,7 @@ namespace iry\cli;
          $msg = trim($msg)===''?self::_l('请选择'):$msg;
          while (true){
              $tmpRes = self::stdin($msg.":\t",function($v) use ($arr,$mul){
-                 return (is_numeric($v) && isset($arr[$v])) || ($mul && in_array($v,['#','<','*']));
+                 return (preg_match("~[0-9a-ZA-Z]+~i",$v) && isset($arr[$v])) || ($mul && in_array($v,['#','<','*','@']));
              },function ($v){return trim($v);});
 
              if(!$mul){
@@ -183,13 +183,16 @@ namespace iry\cli;
 					 array_pop($r);
 				 } elseif ($tmpRes === '*') {
 					 $r = [];
-				 } else {
+				 }elseif ($tmpRes === '@') {
+                     $r = array_keys($arr);
+                     break;
+                 } else {
 					 $r[] = $tmpRes;
 					 $r = array_unique($r);
 				 }
 				 echo "\033[1A\033[K";
 				 self::stdout(self::_l('当前已选择').':[' . implode(',', $r) . ']', 'comment');
-				 $msg = self::_l("请继续选择[#结束,<回退,*清空]");
+				 $msg = self::_l("请继续选择[@全选,#结束,<回退,*清空]");
 			 }
          }
          return $r;
@@ -223,9 +226,14 @@ namespace iry\cli;
                  self::stdout($msg . ':');
              }
          }
-         $stdin=fopen('php://stdin','r');
-         $content=trim(fgets($stdin,$limitLen));
-         fclose($stdin);
+         if(PHP_OS=='WINNT' && version_compare(PHP_VERSION,'7.1.0', '>')){
+             sapi_windows_cp_set(936);
+             $content=trim(fgets(STDIN));
+             $content=@iconv("GBK","UTF-8//IGNORE",$content);
+             sapi_windows_cp_set(65001);
+         }else{
+             $content=trim(fgets(STDIN));
+         }
 
          if(is_callable($processor)){
              $content = call_user_func($processor,$content);
