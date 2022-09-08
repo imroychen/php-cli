@@ -86,6 +86,9 @@ namespace iry\cli;
          }
 
      }
+     static function versionId(){
+         return 10001;
+     }
 
      /**
       * windows cmd 不兼容
