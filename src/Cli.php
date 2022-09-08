@@ -87,7 +87,7 @@ namespace iry\cli;
 
      }
      static function versionId(){
-         return 10001;
+         return 10002;
      }
 
      /**
