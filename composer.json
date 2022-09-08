@@ -12,7 +12,8 @@
 	],
 	"require": {
 		"php": ">=5.4",
-      	"ext-mbstring": "*"
+      	"ext-mbstring": "*",
+      "ext-iconv": "*"
     },
 	"autoload": {
 		"psr-4": {

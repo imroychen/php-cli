@@ -137,18 +137,20 @@ namespace iry\cli;
 
      /**
       * 选择对话
-      * @param $arr
+      * @param $list
       * @param int $colQty
       * @param string $msg
       * @param bool $mul 多选
       * @return mixed|string|void
       */
 
-     static function select($arr,$colQty=1,$msg='',$mul=false){
+     static function select($list,$colQty=1,$msg='',$mul=false){
          $n = 1;
          $row = 0;
-         if(empty($arr)){echo (self::_l("选项列表有误"));return ;}
+         if(empty($list)){echo (self::_l("选项列表有误"));return ;}
          self::stdout("\n---------------------------\n");
+         $arr = array_values($list);
+         $keys = array_keys($list);
          foreach ($arr as $k=>$v){
              //$color = ($row%2)===0? 'while' :'light_gray';
              $color = 'while';
@@ -175,7 +177,7 @@ namespace iry\cli;
              },function ($v){return trim($v);});
 
              if(!$mul){
-                 return $tmpRes;
+                 return $keys[$tmpRes];
              }else {
 				 if ($tmpRes === '#') {
 					 break;
@@ -191,6 +193,11 @@ namespace iry\cli;
 				 self::stdout(self::_l('当前已选择').':[' . implode(',', $r) . ']', 'comment');
 				 $msg = self::_l("请继续选择[#结束,<回退,*清空]");
 			 }
+         }
+         if(!empty($r)){
+             foreach ($r as $_k=>$_v){
+                 $r[$_k] = $keys[$_v];
+             }
          }
          return $r;
      }
