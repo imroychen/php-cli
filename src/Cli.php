@@ -47,6 +47,17 @@ namespace iry\cli;
          'light_gray' => '47',
      ];
 
+     static private $_theme = [
+         'error' => ['white', 'red'],
+         'success'=> ['green',null],
+         'warning' => ['purple', 'yellow'],
+
+         'info' => ['green', null],
+         'comment' => ['yellow', null],
+         'question' => ['black', 'cyan'],
+         'highlight' => ['red', null],
+     ];
+
      static private $_lang = [
          'zh'=>[
              '请选择'=>'请选择',
@@ -84,7 +95,10 @@ namespace iry\cli;
                  exit;
              }
          }
-
+         return null;
+     }
+     static function versionId(){
+         return 10002;
      }
 
      /**
@@ -137,18 +151,20 @@ namespace iry\cli;
 
      /**
       * 选择对话
-      * @param $arr
+      * @param $list
       * @param int $colQty
       * @param string $msg
       * @param bool $mul 多选
       * @return mixed|string|void
       */
 
-     static function select($arr,$colQty=1,$msg='',$mul=false){
+     static function select($list,$colQty=1,$msg='',$mul=false){
          $n = 1;
          $row = 0;
-         if(empty($arr)){echo (self::_l("选项列表有误"));return ;}
+         if(empty($list)){echo (self::_l("选项列表有误"));return ;}
          self::stdout("\n---------------------------\n");
+         $arr = array_values($list);
+         $keys = array_keys($list);
          foreach ($arr as $k=>$v){
              //$color = ($row%2)===0? 'while' :'light_gray';
              $color = 'while';
@@ -175,7 +191,7 @@ namespace iry\cli;
              },function ($v){return trim($v);});
 
              if(!$mul){
-                 return $tmpRes;
+                 return $keys[$tmpRes];
              }else {
 				 if ($tmpRes === '#') {
 					 break;
@@ -191,6 +207,11 @@ namespace iry\cli;
 				 self::stdout(self::_l('当前已选择').':[' . implode(',', $r) . ']', 'comment');
 				 $msg = self::_l("请继续选择[#结束,<回退,*清空]");
 			 }
+         }
+         if(!empty($r)){
+             foreach ($r as $_k=>$_v){
+                 $r[$_k] = $keys[$_v];
+             }
          }
          return $r;
      }
@@ -218,7 +239,7 @@ namespace iry\cli;
      static function stdin($msg='',$validator=false,$processor = false,$limitLen=100000){
          if($msg) {
              if (strpos($msg, '[span]')) {
-                 self::output($msg . ':');
+                 self::stdout($msg . ':');
              } else {
                  self::stdout($msg . ':');
              }
@@ -241,7 +262,7 @@ namespace iry\cli;
      }
 
      /**
-      * 标准输出
+      * 标准输出 暂时仅支持打印到屏幕
       * @param $str
       * @param bool $type error,info,comment,question,highlight,warning
       * @param bool $return
@@ -249,6 +270,50 @@ namespace iry\cli;
       */
 
      static public function stdout($str,$type = false,$return = false){
+         return self::output($str,$type,$return);
+     }
+
+     /**
+      * @param array $header
+      * @param array $data
+      * @param string $align 'l/c/r/left/center/rignt'
+      * @return cmp\Table
+      */
+     static public function table($header=[],$data=[],$align='l',$autoRender=true){
+
+         $tab =  new cmp\Table();
+         if(!empty($header)){
+             $alignMap = ['l'=>1,'left'=>1,'r'=>0,'right'=>0,'c'=>2,'center'=>2];
+             $tab->setHeader($header,isset($alignMap[$align])?$alignMap[$align]:1);
+         }
+
+         $len = count($data);
+         if($len>0 && is_array($data)){
+             $i = 0;
+             foreach ($data as $d) {
+                 $i++;
+                 $tab->addRow($d);
+                 if($i<$len) {
+                     $tab->addRow('-');
+                 }
+             }
+         }
+         if($autoRender){
+             $tab->render();
+         }
+
+         return $tab;
+     }
+
+     /**
+      * 文本输出
+      * @param string|array $str  array:['this',['is','green'],'test'];
+      * @param false|string $type success,warning,error,info,comment,question,highlight|false
+      * @param bool $return
+      * @return string
+      */
+
+     static public function output($str,$type = false,$return = false){
 
          if(is_array($str)){
              $r = '';
@@ -256,32 +321,24 @@ namespace iry\cli;
                  if(is_array($item)){
                      $style = isset($item['style'])?$item['style']:(isset($item[1])?$item[1]:$type);
                      $text = (string)( isset($item['text'])?$item['text']:(isset($item[0])?$item[0]:'') );
-                     $r .= self::stdout($text, $style, $return);
+                     $r .= self::output($text, $style, $return);
                  }else{
-					 $r .= self::stdout((string)$item, $type, $return);
+                     $r .= self::output((string)$item, $type, $return);
                  }
              }
-			 if ($return) {
-				 return $r;
-			 } else {
-				 echo $r;
-			 }
+             if ($return) {
+                 return $r;
+             } else {
+                 echo $r;
+             }
          }else {
-             $typeList = [
-                 'error' => ['white', 'red'],
-                 'info' => ['green', null],
-                 'comment' => ['yellow', null],
-                 'question' => ['black', 'cyan'],
-                 'highlight' => ['red', null],
-                 'warning' => ['black', 'yellow'],
-             ];
              if (is_array($type)) {
                  $color = $type;
                  $color[0] = isset($color[0]) ? $color[0] : null;
                  $color[1] = isset($color[1]) ? $color[1] : null;
              } else {
                  $type = $type ? trim($type, '[ ]') : $type;
-                 $color = ($type && isset($typeList[$type])) ? $typeList[$type] : false;
+                 $color = ($type && isset(self::$_theme[$type])) ? self::$_theme[$type] : false;
              }
              if (PHP_OS === 'WINNT') {
                  $str = str_replace("\r\n", "\n", $str);
@@ -296,43 +353,9 @@ namespace iry\cli;
                  return $type ? self::getColoredString($str, $color[0], $color[1]) : $str;
              } else {
                  echo $type ? self::getColoredString($str, $color[0], $color[1]) : $str;
-                 return '';
              }
          }
-		 return '';
-     }
-
-	 /**
-	  * 混合输出
-	  * @param string $str error:[white, red], info:[green, null],comment:[yellow, null],
-	  *             question:[black, cyan],highlight:[red, null],warning:[black, yellow],
-	  */
-
-     static public function output($str)
-     {
-         //$str = is_array($str)? implode("\n", $str): $str;
-         //echo iconv('utf-8','gbk',$str);
-        $arr = explode("\n",$str);
-
-         $rowQty = count($arr);
-         $i = 0;
-         foreach($arr as $row) {
-             $i++;
-             $rowList = explode('[span]',$row);
-             foreach($rowList as $v) {
-                 $type = false;
-                 if(isset($v[0]) && $v[0]==='[' && strpos($v,']')>2  ){
-                     $tmp = explode(']',$v);
-                     $type = $tmp[0];unset($tmp[0]);
-                     //$type = trim(trim($type),'[ ]');
-                     //var_export($type);
-                     $v = implode("]",$tmp);
-                 }
-                 //var_export([$v,$type]);
-                 self::stdout($v,$type);
-             }
-             if($i<$rowQty){echo "\n";}
-         }
+         return '';
      }
 
      /**

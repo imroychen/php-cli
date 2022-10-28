@@ -2,7 +2,7 @@
 	"name": "iry/cli",
 	"description": "PHP CLI Helper",
 	"type": "library",
-	"version": "1.0.1",
+	"keywords": ["php-cli","cli"],
 	"license": "MIT",
 	"authors": [
 		{
@@ -12,11 +12,12 @@
 	],
 	"require": {
 		"php": ">=5.4",
-      "ext-mbstring": "*"
+      	"ext-mbstring": "*",
+      "ext-iconv": "*"
     },
 	"autoload": {
 		"psr-4": {
-			"iry\\cli\\": ""
+			"iry\\cli\\": "src"
 		}
 	}
 }
