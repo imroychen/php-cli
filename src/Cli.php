@@ -47,6 +47,17 @@ namespace iry\cli;
          'light_gray' => '47',
      ];
 
+     static private $_theme = [
+         'error' => ['white', 'red'],
+         'success'=> ['green',null],
+         'warning' => ['purple', 'yellow'],
+
+         'info' => ['green', null],
+         'comment' => ['yellow', null],
+         'question' => ['black', 'cyan'],
+         'highlight' => ['red', null],
+     ];
+
      static private $_lang = [
          'zh'=>[
              '请选择'=>'请选择',
@@ -84,7 +95,7 @@ namespace iry\cli;
                  exit;
              }
          }
-
+         return null;
      }
      static function versionId(){
          return 10002;
@@ -251,7 +262,7 @@ namespace iry\cli;
      }
 
      /**
-      * 标准输出
+      * 标准输出 暂时仅支持打印到屏幕
       * @param $str
       * @param bool $type error,info,comment,question,highlight,warning
       * @param bool $return
@@ -297,7 +308,7 @@ namespace iry\cli;
      /**
       * 文本输出
       * @param string|array $str  array:['this',['is','green'],'test'];
-      * @param bool $type error,info,comment,question,highlight,warning
+      * @param false|string $type success,warning,error,info,comment,question,highlight|false
       * @param bool $return
       * @return string
       */
@@ -310,9 +321,9 @@ namespace iry\cli;
                  if(is_array($item)){
                      $style = isset($item['style'])?$item['style']:(isset($item[1])?$item[1]:$type);
                      $text = (string)( isset($item['text'])?$item['text']:(isset($item[0])?$item[0]:'') );
-                     $r .= self::stdout($text, $style, $return);
+                     $r .= self::output($text, $style, $return);
                  }else{
-                     $r .= self::stdout((string)$item, $type, $return);
+                     $r .= self::output((string)$item, $type, $return);
                  }
              }
              if ($return) {
@@ -321,21 +332,13 @@ namespace iry\cli;
                  echo $r;
              }
          }else {
-             $typeList = [
-                 'error' => ['white', 'red'],
-                 'info' => ['green', null],
-                 'comment' => ['yellow', null],
-                 'question' => ['black', 'cyan'],
-                 'highlight' => ['red', null],
-                 'warning' => ['black', 'yellow'],
-             ];
              if (is_array($type)) {
                  $color = $type;
                  $color[0] = isset($color[0]) ? $color[0] : null;
                  $color[1] = isset($color[1]) ? $color[1] : null;
              } else {
                  $type = $type ? trim($type, '[ ]') : $type;
-                 $color = ($type && isset($typeList[$type])) ? $typeList[$type] : false;
+                 $color = ($type && isset(self::$_theme[$type])) ? self::$_theme[$type] : false;
              }
              if (PHP_OS === 'WINNT') {
                  $str = str_replace("\r\n", "\n", $str);
@@ -350,7 +353,6 @@ namespace iry\cli;
                  return $type ? self::getColoredString($str, $color[0], $color[1]) : $str;
              } else {
                  echo $type ? self::getColoredString($str, $color[0], $color[1]) : $str;
-                 return '';
              }
          }
          return '';
