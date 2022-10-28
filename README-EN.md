@@ -36,7 +36,7 @@ $numeric = Cli::stdin('Pls Enter');//Wait and get the data entered by the user
 $numeric = Cli::stdin('Pls enter the quantity',function(){return preg_match('/^[0-9]+$/');},'trim');
 $numeric = Cli::stdin('Pls enter the quantity',function(){return preg_match('/^[0-9]+$/');},'trim');
 ```
-## Standard output stdout($msg,$styleType)
+## Standard output output($msg,$styleType)
 Only print to the screen, support colored text
 
 | Parameters | Type | Description |

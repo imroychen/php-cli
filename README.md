@@ -36,23 +36,34 @@ $numeric = Cli::stdin('请输入');//等待并获取用户输入的数据
 $numeric = Cli::stdin('请输入数字',function(){return preg_match('/^[0-9]+$/');},'trim');
 $numeric = Cli::stdin('请输入数字',function(){return preg_match('/^[0-9]+$/');},'trim');
 ```
-## 标准输出 stdout($msg,$styleType)
-仅仅打印到屏幕 支持彩色文字
+## 标准输出 output($msg,$styleType)
+打印到屏幕 支持彩色文字
 
 |参数    ||说明  |
 |  ----    |----| ----  |
 |$msg      |string/array|消息：等待用户输入前，输一条提示消息消息 |
 |$styleType |string/array|error,info,comment,question,highlight,warning,[前景色,背景色]|
 $msg数组模式可以设置复杂的彩色文字如下示例
-
+### 示例
 ```php
-[
+Cli::output('这是一个测试','success') 
+Cli::output('这是一个测试','error')
+Cli::output('这是一个测试',['purple','yellow'])
+Cli::output([
     '这是',
     ['一个','error'],//使用error样式
-    ['测试','info']//使用info样式
+    ['测试','yellow'],//使用info样式
     //string || ['$msg','$styleType']
-];
+]);
 ```
+### 示例大致效果如下
+<div style="background:#1e1d1d;padding: 10px 20px">
+<span style="color:green">这是一个测试：</span><br />
+<span style="color:#fff;background:#f54444">这是一个测试：</span><br />
+<span style="color:purple;background:yellow">这是一个测试：</span><br />
+这是<span style="color:#fff;background:#f54444">一个</span><span style="color: yellow">测试</span><br />
+</div>
+
 ### 确认对话
 confirm($msg,$validator,$processor);//Cli中 确认对话
 
