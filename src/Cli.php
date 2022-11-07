@@ -60,16 +60,16 @@ namespace iry\cli;
 
      static private $_lang = [
          'zh'=>[
-             '请选择'=>'请选择',
-             '请继续选择[#结束,<回退,*清空]'=>'请继续选择[#结束，<回退，*清空]',
-             '当前已选择'=>'当前已选择',
-             '输入不正确!请重新输入.'=>'输入不正确！请重新输入。'
+             'Please select'=>'请选择',
+             'Please continue to select.'=>'请继续选择[#结束，<回退，*清空，%全选]',
+             'Currently selected'=>'当前已选择',
+             'Error,please enter again.'=>'输入不正确！请重新输入。'
          ],
          'en'=>[
-             '请选择'=>'Please select',
-             '请继续选择[#结束,<回退,*清空]'=>'Please continue to select[#complete，<go back，*reset]',
-             '当前已选择'=>'Currently selected',
-             '输入不正确!请重新输入.'=>'Invalid input! please enter again.'
+             'Please select'=>'Please select',
+             'Please continue to select.'=>'Please continue to select[#complete，<go back，*reset,%select all]',
+             'Currently selected'=>'Currently selected',
+             'Error,please enter again.'=>'Invalid input! please enter again.'
          ]
      ];
 
@@ -116,6 +116,20 @@ namespace iry\cli;
 
      private static function _l($str){
          $type = self::$_cfg['lang'];
+         $str = strtolower(trim($str));
+
+         if(!isset(self::$_lang[$type]['_init_'])){
+             $new = ['_init_'=>true];
+            foreach (self::$_lang[$type] as $k=>$v){
+                $_k = strtolower(trim($k));
+                if($k!=$_k){
+                    unset(self::$_lang[$type][$k]);
+                    $new[$_k]=$v;
+                }
+            }
+             self::$_lang[$type] = array_merge(self::$_lang[$type],$new);
+         }
+
         return isset(self::$_lang[$type][$str])?self::$_lang[$type][$str]:$str;
      }
 
@@ -184,18 +198,20 @@ namespace iry\cli;
 
 
          $r = [];
-         $msg = trim($msg)===''?self::_l('请选择'):$msg;
+         $msg = trim($msg)===''?self::_l('Please select'):$msg;
          while (true){
              $tmpRes = self::stdin($msg.":\t",function($v) use ($arr,$mul){
-                 return (is_numeric($v) && isset($arr[$v])) || ($mul && in_array($v,['#','<','*']));
+                 return (is_numeric($v) && isset($arr[$v])) || ($mul && in_array($v,['#','<','*','%']));
              },function ($v){return trim($v);});
 
              if(!$mul){
                  return $keys[$tmpRes];
              }else {
-				 if ($tmpRes === '#') {
-					 break;
-				 } elseif ($tmpRes === '<') {
+                 if ($tmpRes === '%') {
+                     return $keys;
+                 } elseif ($tmpRes === '#') {
+                     break;
+                 } elseif ($tmpRes === '<') {
 					 array_pop($r);
 				 } elseif ($tmpRes === '*') {
 					 $r = [];
@@ -204,8 +220,8 @@ namespace iry\cli;
 					 $r = array_unique($r);
 				 }
 				 echo "\033[1A\033[K";
-				 self::stdout(self::_l('当前已选择').':[' . implode(',', $r) . ']', 'comment');
-				 $msg = self::_l("请继续选择[#结束,<回退,*清空]");
+				 self::stdout(self::_l('Currently selected').':[' . implode(',', $r) . ']', 'comment');
+				 $msg = self::_l("Please continue to select.");
 			 }
          }
          if(!empty($r)){
@@ -254,7 +270,7 @@ namespace iry\cli;
          if(is_callable($validator) && !call_user_func($validator,$content) ){
              //if($callback && !$callback($content)){
              self::stdout("[error]",'highlight');
-             self::stdout(self::_l('输入不正确!请重新输入.'),'comment');
+             self::stdout(self::_l('Error,please enter again.'),'comment');
              self::stdout("\n");
              $content = self::stdin($msg, $validator,$processor,$limitLen);
          }
