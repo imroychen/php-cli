@@ -102,6 +102,13 @@ namespace iry\cli;
      }
 
      /**
+      * @return bool
+      */
+     static function isCli(){
+         return (bool)(preg_match("/cli/i", php_sapi_name()));
+     }
+
+     /**
       * windows cmd 不兼容
       * @return mixed
       */
@@ -290,6 +297,7 @@ namespace iry\cli;
      }
 
      /**
+      *
       * @param array $header
       * @param array $data
       * @param string $align 'l/c/r/left/center/rignt'
@@ -383,7 +391,7 @@ namespace iry\cli;
      static public function cursorMove($position,$n=1){
          $position = strtolower($position[0]);
          $list = ['u'=>'A','d'=>'B','l'=>'D','r'=>'C'];
-         echo '\033['.$n.$list[$position];
+         echo "\033[$n".$list[$position];
      }
 
      /**
@@ -393,7 +401,7 @@ namespace iry\cli;
       */
 
      static public function cursorPosition($x,$y){
-        echo '\033['.$y.';'.$x.'H';
+        echo "\033[$y;$x".'H';
      }
 
      /**
@@ -416,7 +424,7 @@ namespace iry\cli;
 			 sleep(1);
 
              $okLeng = floor(($s-$i+1)/$s*$totalLen);
-
+             echo "\r";
 			 if($colorBar) {
 				 $str = str_pad($i.'/'.$s,$totalLen," ",STR_PAD_BOTH);
 
@@ -433,7 +441,7 @@ namespace iry\cli;
 
              self::stdout($msg);
 
-             echo "\r";
+
 
              //echo "\r\033[K";
          }
@@ -449,7 +457,7 @@ namespace iry\cli;
 		 $len = 60;
 		 $c = floor($len/$total*$current);
 		 $bar = str_pad('',$c,'=').str_pad('',$len-$c,'-');
-		 self::stdout("[$bar] $current/$total $msg     \r");
+		 self::stdout("\r[$bar] $current/$total $msg     ");
 		 //self::stdout("[$s]秒倒计时 [".$okStr.$waitStr.']'.$i.'/'.$s.'.');
 	 }
 }
