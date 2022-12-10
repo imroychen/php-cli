@@ -418,46 +418,47 @@ namespace iry\cli;
       */
      static public function wait($s,$msg=''){
          $totalLen = 20;
-		 $disabledColor = self::$_cfg['disable_style'];
-		 $colorBar = !($disabledColor || PHP_OS === 'WINNT');
+         $disabledColor = self::$_cfg['disable_style'];
+         $colorBar = !($disabledColor || PHP_OS === 'WINNT');
          for ($i=$s;$i>0;$i--){
-			 sleep(1);
-
-             $okLeng = floor(($s-$i+1)/$s*$totalLen);
              echo "\r";
-			 if($colorBar) {
-				 $str = str_pad($i.'/'.$s,$totalLen," ",STR_PAD_BOTH);
-
-				 $waitStr = substr($str,0,$totalLen-$okLeng);//str_pad(,$totalLen-$okLeng, " " );
-				 $okStr = substr($str,$totalLen-$okLeng);//str_pad(,$okLeng," ");
-				 self::stdout(["[$s]秒倒计时 [", [$waitStr, ['black', 'cyan']], [$okStr, [null, 'dark_gray']], '] ']);
-
-			 }else{
-
-				 $waitStr = str_pad('',$totalLen-$okLeng, '=' );
-				 $okStr = str_pad('', $okLeng,'-');
-				 self::stdout("[$s]秒倒计时 [$waitStr$okStr] $i/$s.");
-			 }
-
+             sleep(1);
+             self::output("[$s 秒倒计时] ");
+             self::_bar($s,$i,20,false);
              self::stdout($msg);
-
-
-
-             //echo "\r\033[K";
          }
      }
 
-	 /**
-	  * @param int $total
-	  * @param int $current
-	  * @param string $msg
-	  */
-     static public function progressBar($total,$current,$msg=''){
-		//
-		 $len = 60;
-		 $c = floor($len/$total*$current);
-		 $bar = str_pad('',$c,'=').str_pad('',$len-$c,'-');
-		 self::stdout("\r[$bar] $current/$total $msg     ");
-		 //self::stdout("[$s]秒倒计时 [".$okStr.$waitStr.']'.$i.'/'.$s.'.');
-	 }
+     static private function _bar($total,$current,$totalLen,$moveCursor=true){
+         $disabledColor = self::$_cfg['disable_style'];
+         $colorBar = !($disabledColor || PHP_OS === 'WINNT');
+         $solidLen = floor($current*$totalLen/$total);
+         //$hollowLen = $totalLen-$solidLen;
+
+
+         if($moveCursor) echo "\r";
+         if($colorBar ) {
+             $str = str_pad($current.'/'.$total,$totalLen," ",STR_PAD_BOTH);
+             $solidStr = substr($str,0,$solidLen);
+             $hollowStr = substr($str,$solidLen);
+             self::output(['[',[$solidStr, ['white', 'cyan']], [$hollowStr, ['black', 'light_gray']], '] ']);
+
+         }else{
+
+             $solidStr = str_pad('',$solidLen, '=' );
+             $hollowStr = str_pad('', $totalLen-$solidLen,'-');
+             self::output('['.$solidStr.$hollowStr."] $current/$total.");
+         }
+     }
+
+     /**
+      * @param $total
+      * @param $current
+      * @param string $msg
+      */
+
+     static public function progressBar($total,$current,$msg='',$len=60){
+         self::_bar($total,$current,$len,true);
+         self::output("$current/$total $msg     ");
+     }
 }
