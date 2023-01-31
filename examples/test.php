@@ -26,7 +26,7 @@ class TestEg
     function test_output()
     {
 
-        showEg(2, 'Cli::output(Str)', __LINE__);
+        showEg(2, '输出: Cli::output(Str)', __LINE__);
         echo "\n";
         //----以下就是示例效果的代码
         Cli::output("\n这是一个测试");                    //直接打印
@@ -40,6 +40,28 @@ class TestEg
             ['测试', ['white', 'green']],//使用info样式
             "\n"
         ]);
+    }
+
+    function test_stdin()
+    {
+        showEg(4, '交互输入: Cli::stdin(Str,$validator,$processor)', __LINE__);
+        echo "\n";
+        //----以下就是示例效果的代码
+        $content = Cli::stdin("请输入");
+        Cli::output("您输入的内容是:", 'warning');
+        Cli::output($content . "\n");
+
+        $num = Cli::stdin("请输入数字", function ($v) {
+            return preg_match('/\d+/', $v);
+        });
+        Cli::output("您输入的数字是:", 'warning');
+        Cli::output($num . "\n");
+
+        $emal = Cli::stdin("请输入邮箱", function ($v) {
+            return preg_match('/\w+@[\w\-.]+\.[\w]+/', $v);
+        }, 'trim');
+        Cli::output("您的邮箱是:", 'warning');
+        Cli::output($emal . "\n");
     }
 
     function test_select(){
@@ -100,29 +122,6 @@ class TestEg
     }
 
 
-    function test_stdin()
-    {
-        showEg(4, '倒计时: Cli::stdin(Str,$validator,$processor)', __LINE__);
-        echo "\n";
-        //----以下就是示例效果的代码
-        $content = Cli::stdin("请输入");
-        Cli::output("您输入的内容是:", 'warning');
-        Cli::output($content . "\n");
-
-        $num = Cli::stdin("请输入数字", function ($v) {
-            return preg_match('/\d+/', $v);
-        });
-        Cli::output("您输入的数字是:", 'warning');
-        Cli::output($num . "\n");
-
-        $emal = Cli::stdin("请输入邮箱", function ($v) {
-            return preg_match('/\w+@[\w\-.]+\.[\w]+/', $v);
-        }, 'trim');
-        Cli::output("您的邮箱是:", 'warning');
-        Cli::output($emal . "\n");
-    }
-
-
     function test_loading()
     {
         showEg(2, 'Cli::loading(callable,"msg")', __LINE__+1);
@@ -153,15 +152,25 @@ if(!Cli::isCli()){
 }
 $eg = new TestEg();
 $methods = get_class_methods($eg);
-$egList = ['ALL'=>'ALL'];
+$egList = [];
 foreach ($methods as $v){
     $egList[$v] = str_ireplace('test_','',$v);
 }
-$egName = Cli::select($egList,1,'您需要查看哪个示例');
-if($egName==='ALL') {
-    foreach ($methods as $v){
-        $this->$v();
+$egList['all']='ALL / 全部';
+$egList['exit']='Exit / 退出';
+while (true) {
+    $egName = Cli::select($egList, 3, '您需要查看哪个示例');
+    if ($egName === 'all') {
+        if(Cli::confirm("您选择的展示全部示例，是否要继续")) {
+            foreach ($methods as $k => $v) {
+                $eg->$v();
+            }
+        }
     }
-}else{
-    $eg->$egName();
+    elseif($egName==='exit') {
+        exit("已退出\n");
+    }
+    else {
+        $eg->$egName();
+    }
 }
