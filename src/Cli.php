@@ -297,7 +297,7 @@ namespace iry\cli;
      }
 
      /**
-      *
+      * table
       * @param array $header
       * @param array $data
       * @param string $align 'l/c/r/left/center/rignt'
@@ -330,7 +330,7 @@ namespace iry\cli;
      }
 
      /**
-      * 文本输出
+      * output
       * @param string|array $str  array:['this',['is','green'],'test'];
       * @param false|string $type success,warning,error,info,comment,question,highlight|false
       * @param bool $return
@@ -412,7 +412,7 @@ namespace iry\cli;
      }
 
      /**
-      *
+      * Wait
       * @param int $s 秒数
       * @param string $msg 消息
       */
@@ -420,13 +420,17 @@ namespace iry\cli;
          $totalLen = 20;
          $disabledColor = self::$_cfg['disable_style'];
          $colorBar = !($disabledColor || PHP_OS === 'WINNT');
+         $msg = empty($msg)? "[$s 秒倒计时]":$msg;
          for ($i=$s;$i>0;$i--){
              echo "\r";
-             sleep(1);
-             self::output("[$s 秒倒计时] ");
              self::_bar($s,$i,20,false);
-             self::stdout($msg);
+             self::output($msg);
+             sleep(1);
          }
+
+         echo "\r";
+         self::_bar($s,0,20,false);
+         self::output($msg);
      }
 
      static private function _bar($total,$current,$totalLen,$moveCursor=true){
@@ -452,13 +456,52 @@ namespace iry\cli;
      }
 
      /**
+      * progressBar
       * @param $total
       * @param $current
       * @param string $msg
+      * @param int $len 进度条的总宽度
       */
 
      static public function progressBar($total,$current,$msg='',$len=60){
-         self::_bar($total,$current,$len,true);
+         self::_bar($total,$current+1,$len,true);
          self::output("$current/$total $msg     ");
+     }
+
+     /**
+      * @param callable $callback
+      * @param string $msg
+      * @param array $options [
+      *     'style'=>'int 样式 0-2 default(0)',
+      *     'refresh_rate'=>'int 刷新频率 default(60)',
+      *     'fps'=>'int 帧率 0:Auto|1-30 default(0)'
+      * ]
+      */
+
+     static public function loading($callback,$msg='',$options=[]){
+
+         $options = array_merge(['style'=>0,'refresh_rate'=>100,'fps'=>0],$options);
+         $loading = [
+             ['⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽','⣾'],
+             ["◐", "◓", "◑", "◒"],
+             ['   ','.  ', '.. ','...'],
+         ];
+         $loading = isset($loading[$options['style']])?$loading[$options['style']]:$loading[0];
+         $len = count($loading);
+         $after = $options['style']===2;
+
+         $switchSpeed = $options['fps']<1? ($options['refresh_rate']/$len/2): $options['refresh_rate']/min($options['fps'],30);
+         $i = 0;
+
+         while (true) {
+             if(call_user_func($callback)) return;
+
+             $loadingStr = self::getColoredString($loading[intval($i/$switchSpeed) % $len].' ','green');
+             echo $after ? ("\r" .$msg.$loadingStr): ("\r" .$loadingStr.$msg);
+
+             if($i>=$options['refresh_rate']*$len) $i=0;
+             else $i++;
+             usleep(1000000/$options['refresh_rate']);
+         }
      }
 }
