@@ -3,12 +3,14 @@ require dirname(__DIR__).'/autoload.php';
 use iry\cli\Cli;
 function showEg($n, $code, $line)
 {
+    Cli::setTypewriterMode(true);
     echo "\n--------------------[示例2]-------------------------------\n";
     Cli::output($code . "\n");
     Cli::stdin('回车查看效果');
     Cli::cursorMove('u', 1);
     Cli::output(["示例代码在第【",[$line+1,'warning'],'】行']);
     echo "\n";
+    Cli::setTypewriterMode(false);
 }
 
 class TestEg

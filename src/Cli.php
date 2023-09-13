@@ -8,8 +8,9 @@ namespace iry\cli;
 /**
  * Class Cli
  * @package iry\cli
- * @method setCharset ($charset); //$charset:'utf-8', 'gbk', 'gb2312'
- * @method setLang ($lang); //$lang: zh/en
+ * @method static setCharset ($charset); //$charset:'utf-8', 'gbk', 'gb2312'
+ * @method static setLang ($lang); //$lang: zh/en
+ * @method static setTypewriterMode($p);//$p bool
  */
 
  class Cli
@@ -72,12 +73,20 @@ namespace iry\cli;
              'Error,please enter again.'=>'Invalid input! please enter again.'
          ]
      ];
+     private static $_typewriterMode=false;
 
      static function __callStatic($name, $arguments)
      {
          $name = $name==='charset'?'setCharset':$name;
+         $lowerName = strtolower($name);
+         if($lowerName ==='settypewritermode'){
+             self::$_typewriterMode = !!$arguments[0];
+         }
          if(strpos($name,'set')===0){
              $fn = substr($name,3);
+             $fn = preg_replace('/([A-Z])/', '_$1', $fn);
+             $fn = strtolower(ltrim($fn, '_'));
+
              if(isset(self::$_cfg[$fn])){
                  self::$_cfg[$fn] = $arguments[0];
              }
@@ -170,6 +179,20 @@ namespace iry\cli;
          }
      }
 
+     static private function _typingAnim($text){
+         $totalLen = mb_strlen($text);
+         $start = 0;
+         while (true){
+             $len = 1;
+             echo mb_substr($text,$start,$len);
+             usleep(1000 * 100);
+             if($start>$totalLen){
+                 return ;
+             }
+             $start=$start+$len;
+         }
+     }
+
      /**
       * 选择对话
       * @param $list
@@ -180,28 +203,46 @@ namespace iry\cli;
       */
 
      static function select($list,$colQty=1,$msg='',$mul=false){
+
          $n = 1;
          $row = 0;
          if(empty($list)){echo (self::_l("选项列表有误"));return ;}
-         self::stdout("\n---------------------------\n");
-         $arr = array_values($list);
-         $keys = array_keys($list);
+
+         $widths = [0=>0];
+         $arr = [];
+         $keys = [];
+         $i=1;
+         foreach ($list as $k=>$v){
+             $arr[$i] = $v;
+             $keys[$i]=$k;
+             if($colQty>0) $widths[$i] = mb_strwidth($v);
+             $i++;
+         }
+         $valMaxWidth = max($widths);
+
+         $keyMaxWidth = strlen(strval(count($arr)));
+         //- - - - - - - - - - - - - - -
+
+         $rowWidth = max($colQty * ($valMaxWidth + $keyMaxWidth + 5 +3) ,10);
+         self::stdout("\n". str_pad('',$rowWidth,'-')."\n");
+         $rowLine = str_pad('',$rowWidth,'- ');
          foreach ($arr as $k=>$v){
              //$color = ($row%2)===0? 'while' :'light_gray';
              $color = 'while';
-             self::stdout(" $k. ",'highlight');
+             self::stdout(' ' . str_pad(strval($k), $keyMaxWidth, ' ', STR_PAD_LEFT) . ". ", 'highlight');
              self::stdout($v, [$color, null]);
-             if($n<$colQty){
+             echo $colQty > 1 ? str_pad('', max($valMaxWidth - $widths[$k], 0), ' ') : '';
+             if ($n < $colQty) {
                  $n++;
-                 self::stdout( "\t\t");
-             }else{
-                 $n=1;
+                 self::stdout(" | ", ['light_gray', null]);
+             } else {
+                 $n = 1;
                  $row++;
-                 self::stdout( "\n- - - - - - - - - - - - - - -",['light_gray',null]);
-                 self::stdout( "\n");
+                 self::stdout("\n$rowLine", ['light_gray', null]);
+                 self::stdout("\n");
              }
          }
-         self::stdout( "\n---------------------------\n");
+         self::stdout("\n". str_pad('',$rowWidth,'-')."\n");
 
 
          $r = [];
@@ -256,7 +297,7 @@ namespace iry\cli;
       * @param bool $validator
       * @param bool $processor
       * @param int $limitLen
-      * @return string
+      * @return mixed
       */
 
      static function stdin($msg='',$validator=false,$processor = false,$limitLen=100000){
@@ -282,6 +323,19 @@ namespace iry\cli;
              $content = self::stdin($msg, $validator,$processor,$limitLen);
          }
          return $content;
+     }
+
+     /**
+      * 等待输入  标准输入的别名
+      * @param string $label
+      * @param bool $validator
+      * @param bool $processor
+      * @param int $limitLen
+      * @return mixed
+      */
+
+     static function input($label,$validator=false,$processor = false,$limitLen=100000){
+         return self::stdin($label,$validator,$processor,$limitLen);
      }
 
      /**
@@ -375,7 +429,11 @@ namespace iry\cli;
 
              if ($return) {
                  return $type ? self::getColoredString($str, $color[0], $color[1]) : $str;
-             } else {
+             }
+             elseif(self::$_typewriterMode) {
+                self::_typingAnim($type ? self::getColoredString($str, $color[0], $color[1]) : $str);
+             }
+             else{
                  echo $type ? self::getColoredString($str, $color[0], $color[1]) : $str;
              }
          }
