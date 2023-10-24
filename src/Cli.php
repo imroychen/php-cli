@@ -355,7 +355,8 @@ namespace iry\cli;
       * @param array $header 键值对。键需要和$data中的键对应
       * @param array $data
       * @param string $align 'l/c/r/left/center/rignt'
-      * @return cmp\Table
+      * @param bool $autoRender default true ,if false you need "echo $returnResult->render()";
+      * @return cmp\Table | null
       */
      static public function table($header=[],$data=[],$align='l',$autoRender=true){
 
@@ -378,6 +379,7 @@ namespace iry\cli;
          }
          if($autoRender){
              echo $tab->render();
+             return null;
          }
 
          return $tab;
