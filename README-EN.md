@@ -82,7 +82,7 @@ select($list,$colQty,$msg,$mul);
 
 ### Move the cursor
 cursorMove(方位,移动量)
-方位：l:left r:ring u:up, d:down
+方位：l:left r:right u:up, d:down
 ```php
 use ir\cli\Cli;
 $confirm = Cli::cursorMove('u',3); //光标上移三行

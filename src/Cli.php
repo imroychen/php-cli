@@ -352,7 +352,7 @@ namespace iry\cli;
 
      /**
       * table
-      * @param array $header
+      * @param array $header 键值对。键需要和$data中的键对应
       * @param array $data
       * @param string $align 'l/c/r/left/center/rignt'
       * @return cmp\Table
@@ -377,7 +377,7 @@ namespace iry\cli;
              }
          }
          if($autoRender){
-             $tab->render();
+             echo $tab->render();
          }
 
          return $tab;
@@ -442,7 +442,7 @@ namespace iry\cli;
 
      /**
       * 移动光标
-      * @param string $position l:left r:ring u:up, d:down
+      * @param string $position l:left r:right u:up, d:down
       * @param $n
       */
 
