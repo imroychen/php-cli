@@ -215,7 +215,7 @@ namespace iry\cli;
          foreach ($list as $k=>$v){
              $arr[$i] = $v;
              $keys[$i]=$k;
-             if($colQty>0) $widths[$i] = mb_strwidth($v);
+             if($colQty>0) $widths[$i] = is_array($v)? mb_strwidth($v[0]): mb_strwidth(strval($v));
              $i++;
          }
          $valMaxWidth = max($widths);
